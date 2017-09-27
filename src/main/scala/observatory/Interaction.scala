@@ -1,6 +1,9 @@
 package observatory
 
 import com.sksamuel.scrimage.{Image, Pixel}
+import math._
+import Visualization.{predictTemperature, interpolateColor, rgbToPixel}
+import observatory.constants.{tileWidth, tileHeight, alpha}
 
 /**
   * 3rd milestone: interactive visualization
@@ -14,7 +17,11 @@ object Interaction {
     * @return The latitude and longitude of the top-left corner of the tile, as per http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
     */
   def tileLocation(zoom: Int, x: Int, y: Int): Location = {
-    ???
+    val n = pow(2.0d, zoom)
+    val lonDeg = x.toDouble / n * 360 - 180
+    val latRad = atan(sinh(Pi * (1 - 2 * y.toDouble / n)))
+    val latDeg = toDegrees(latRad)
+    Location(latDeg, lonDeg)
   }
 
   /**
@@ -26,7 +33,19 @@ object Interaction {
     * @return A 256×256 image showing the contents of the tile defined by `x`, `y` and `zooms`
     */
   def tile(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)], zoom: Int, x: Int, y: Int): Image = {
-    ???
+    val xOffset = tileWidth * x
+    val yOffset = tileHeight * y
+
+    val pixels = (for {
+      xx <- xOffset until xOffset + tileWidth
+      yy <- yOffset until yOffset + tileHeight
+      tileLoc = tileLocation(zoom, xx, yy)
+      temp = predictTemperature(temperatures, tileLoc)
+      color = interpolateColor(colors, temp)
+      pixel = rgbToPixel(color = color, alpha = alpha)
+    } yield pixel).toArray
+
+    Image(tileWidth, tileHeight, pixels)
   }
 
   /**
@@ -36,11 +55,14 @@ object Interaction {
     * @param generateImage Function that generates an image given a year, a zoom level, the x and
     *                      y coordinates of the tile and the data to build the image from
     */
-  def generateTiles[Data](
-    yearlyData: Iterable[(Int, Data)],
-    generateImage: (Int, Int, Int, Int, Data) => Unit
-  ): Unit = {
-    ???
+  def generateTiles[Data](yearlyData: Iterable[(Int, Data)],
+                          generateImage: (Int, Int, Int, Int, Data) => Unit
+                         ): Unit = yearlyData.par.foreach {
+    case (year: Int, data: Data) => for {
+      zoom <- 0 to 3
+      x <- 0 until pow(2, zoom).toInt
+      y <- 0 until pow(2, zoom).toInt
+    } generateImage(year, zoom, x, y, data)
   }
 
 }
