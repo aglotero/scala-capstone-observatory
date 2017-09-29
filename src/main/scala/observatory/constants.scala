@@ -1,7 +1,7 @@
 package observatory
 
 
-object constants {
+object Constants {
   
   private[observatory] val tileWidth, tileHeight = 256
   private[observatory] val imageWidth = 360

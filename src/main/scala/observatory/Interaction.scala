@@ -3,7 +3,7 @@ package observatory
 import com.sksamuel.scrimage.{Image, Pixel}
 import math._
 import Visualization.{predictTemperature, interpolateColor, rgbToPixel}
-import observatory.constants.{tileWidth, tileHeight, alpha}
+import observatory.Constants.{tileWidth, tileHeight, alpha}
 
 /**
   * 3rd milestone: interactive visualization

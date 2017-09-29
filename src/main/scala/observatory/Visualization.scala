@@ -1,9 +1,9 @@
 package observatory
 
 import com.sksamuel.scrimage.{Image, Pixel}
-import observatory.constants.{
-minDistanceMeters, p, earthRadiusMeters,
-imageWidth, imageHeight
+import observatory.Constants.{
+	minDistanceMeters, p, earthRadiusMeters,
+	imageWidth, imageHeight
 }
 
 import scala.math._
