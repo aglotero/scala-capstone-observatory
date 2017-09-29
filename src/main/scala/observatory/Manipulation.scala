@@ -1,5 +1,8 @@
 package observatory
 
+import observatory.Visualization.predictTemperature
+import observatory.Constants.{gridLatEnd, gridLatStart, gridLonEnd, gridLonStart}
+
 /**
   * 4th milestone: value-added information
   */
@@ -11,7 +14,28 @@ object Manipulation {
     *         returns the predicted temperature at this location
     */
   def makeGrid(temperatures: Iterable[(Location, Double)]): (Int, Int) => Double = {
-    ???
+    val temperatureMap = (
+      for {
+        lat <- gridLatStart to gridLatEnd
+        lon <- gridLonStart to gridLonEnd
+        key = (lat, lon)
+        loc = Location(lat, lon)
+        temp = predictTemperature(temperatures, loc)
+      } yield (key, temp)
+    ).toMap
+
+    def capTo(x: Int, min: Int, max: Int): Int =
+      if (x < min) min
+      else if (x > max) max
+      else x
+
+    def grid(temperatureMap: Map[(Int, Int), Double])(lat: Int, lon: Int) = {
+      val a = capTo(lat, gridLatStart, gridLatEnd)
+      val b = capTo(lon, gridLonStart, gridLonEnd)
+      temperatureMap((a, b))
+    }
+
+    grid(temperatureMap)
   }
 
   /**
@@ -20,7 +44,16 @@ object Manipulation {
     * @return A function that, given a latitude and a longitude, returns the average temperature at this location
     */
   def average(temperaturess: Iterable[Iterable[(Location, Double)]]): (Int, Int) => Double = {
-    ???
+    val grids = temperaturess.map(makeGrid)
+    val avgMap = (
+      for {
+        lat <- gridLatStart to gridLatEnd
+        lon <- gridLonStart to gridLonEnd
+        avgTemp = grids.map(_ (lat, lon)).sum / grids.size
+      } yield (lat, lon) -> avgTemp
+    ).toMap
+
+    (lat: Int, lon: Int) => avgMap((lat, lon))
   }
 
   /**
@@ -29,7 +62,10 @@ object Manipulation {
     * @return A grid containing the deviations compared to the normal temperatures
     */
   def deviation(temperatures: Iterable[(Location, Double)], normals: (Int, Int) => Double): (Int, Int) => Double = {
-    ???
+    val tempGrid = makeGrid(temperatures)
+    (lat: Int, lon: Int) => {
+      tempGrid(lat, lon) - normals(lat, lon)
+    }
   }
 
 
